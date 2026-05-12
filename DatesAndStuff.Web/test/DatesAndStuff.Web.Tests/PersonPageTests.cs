@@ -181,6 +181,59 @@ public class PersonPageTests
         var salaryAfterSubmission = double.Parse(salaryLabel.Text);
         salaryAfterSubmission.Should().BeApproximately(expectedSalary, 0.001);
     }
+
+    [Test]
+    public void Person_SalaryIncrease_LessThanMinusTen_ShouldShowValidationSummaryAndFieldError()
+    {
+        // Arrange
+        const string validationError = "The specified percentag should be between -10 and infinity.";
+
+        driver.Navigate().GoToUrl(BaseURL);
+        driver.FindElement(By.XPath("//*[@data-test='PersonPageNavigation']")).Click();
+
+        var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
+
+        var input = wait.Until(d =>
+        {
+            try
+            {
+                var element = d.FindElement(By.XPath("//*[@data-test='SalaryIncreasePercentageInput']"));
+                return element.Displayed && element.Enabled ? element : null;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return null;
+            }
+        });
+        input.Clear();
+        input.SendKeys("-11");
+
+        // Act
+        var submitButton = wait.Until(d =>
+        {
+            try
+            {
+                var element = d.FindElement(By.XPath("//*[@data-test='SalaryIncreaseSubmitButton']"));
+                return element.Displayed && element.Enabled ? element : null;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return null;
+            }
+        });
+        submitButton.Click();
+
+        // Assert
+        var matchingValidationElements = wait.Until(d =>
+        {
+            var matchingElements = d.FindElements(By.XPath($"//*[normalize-space(.) = \"{validationError}\"]"));
+            return matchingElements.Count >= 2 ? matchingElements : null;
+        });
+
+        matchingValidationElements[0].Text.Should().Be(validationError);
+        matchingValidationElements[1].Text.Should().Be(validationError);
+    }
+
     private bool IsElementPresent(By by)
     {
         try
