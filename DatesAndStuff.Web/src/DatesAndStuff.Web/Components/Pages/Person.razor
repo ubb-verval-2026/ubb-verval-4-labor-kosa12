@@ -1,5 +1,6 @@
 ﻿@page "/person"
 @using System.ComponentModel.DataAnnotations
+@using System.Collections.Generic
 @rendermode InteractiveServer
 
 <PageTitle>Person</PageTitle>
@@ -66,10 +67,21 @@
     }
 
 
-    public class FormModel
+    public class FormModel : IValidatableObject
     {
+        public const string SalaryIncreaseValidationMessage = "The specified percentage should be greater than -10.";
+
         [Required(ErrorMessage = "Percentage should be specified")]
-        [Range(-10d, Double.MaxValue, ErrorMessage = "The specified percentag should be between -10 and infinity.")]
         public double SalaryIncreasePercentage { get; set; } = 0;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (SalaryIncreasePercentage <= -10d)
+            {
+                yield return new ValidationResult(
+                    SalaryIncreaseValidationMessage,
+                    new[] { nameof(SalaryIncreasePercentage) });
+            }
+        }
     }
 }
